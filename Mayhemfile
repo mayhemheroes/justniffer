@@ -1,0 +1,9 @@
+image: ghcr.io/capuanob/justniffer-fuzz:latest
+project: justniffer
+target: justniffer-fuzz
+tests:
+    - file://corpus
+
+cmds:
+  - cmd: /justniffer -f @@
+    max_length: 500000
