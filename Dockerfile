@@ -3,27 +3,18 @@ FROM --platform=linux/amd64 ubuntu:20.04 as builder
 
 ## Install build dependencies.
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y git autoconf automake libboost-all-dev libpcap-dev clang make
+    DEBIAN_FRONTEND=noninteractive apt-get install -y autoconf automake libboost-all-dev libpcap-dev clang make
 
-## Add source code to the build stage. ADD prevents git clone being cached when it shouldn't
-WORKDIR /
-ADD https://api.github.com/repos/capuanob/justniffer/git/refs/heads/mayhem version.json
-RUN git clone -b mayhem https://github.com/capuanob/justniffer.git
+ADD . /justniffer
 WORKDIR /justniffer
 
 ## Build
 RUN ./configure
 RUN  make -j$(nproc)
 
-## Prepare all library dependencies for copy
-RUN mkdir /deps
-RUN cp `ldd ./src/justniffer | grep so | sed -e '/^[^\t]/ d' | sed -e 's/\t//' | sed -e 's/.*=..//' | sed -e 's/ (0.*)//' | sort | uniq` /deps 2>/dev/null || :
-
 ## Package Stage
 FROM --platform=linux/amd64 ubuntu:20.04
-RUN mkdir -p /tests
-COPY --from=builder /justniffer/src/justniffer /justniffer
-COPY --from=builder /justniffer/test/*.cap /tests
-COPY --from=builder /deps /usr/lib
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y libstdc++6 libgcc-s1 libicu66 zlib1g libbz2-1.0 liblzma5 libzstd1 libpcap0.8 libboost-regex1.71.0 libboost-iostreams1.71.0 libboost-program-options1.71.0 
 
-CMD ["/justniffer", "-f", "@@"]
+COPY --from=builder /justniffer/src/justniffer /justniffer
