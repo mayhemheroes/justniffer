@@ -1,7 +1,6 @@
-image: ghcr.io/capuanob/justniffer-fuzz:latest
 project: justniffer
 target: justniffer-fuzz
-tests:
+testsuite:
     - file://corpus
 
 cmds:
